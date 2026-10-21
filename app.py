@@ -1,11 +1,20 @@
-W=$(sudo docker ps -q -f name=airflow_airflow-worker | head -1)
-sudo docker exec $W python -c "
-import traceback
-from core.config.parser import parse_tasks_file
-from core.config.validator import validate_tasks
-p='/opt/airflow/dags/pipelines/sources/crm/crm_plus/crm_plus_nas_landing/app.yaml'
-try:
-    t=parse_tasks_file(p); print('PARSED:', t)
-    print('VALID:', validate_tasks(t))
-except Exception: traceback.print_exc()
-"
+schema_version: "1.0"
+
+tasks:
+  - name: crm_plus_nas_landing
+    layer: alpha
+    engine: spark
+    golden_source:
+      type: filesystem
+      transport: smb
+      name: crm_nas
+      path: "prd/gcaprods/CRM"
+      ingest_mode: incremental
+      module: ../modules/crm_plus_app.py
+      function: nas_landing_log
+      api_params:
+        s3_prefix: "landing/crm_nas/crm_nas/current/"
+    write_mode: append
+    schema_evolution: permissive
+    metadata:
+      project: crm
