@@ -1,0 +1,3 @@
+$re2 = '(?<!CAST\(\s*)\bNULL(\s+(?:AS\s+)?PrimaryPosition\b)'
+Get-ChildItem projects\interactions -Recurse -Include *.sql,*.yaml | Where-Object { Select-String -Path $_.FullName -Pattern 'PrimaryPosition' -Quiet } | ForEach-Object { $t = [IO.File]::ReadAllText($_.FullName); $n = [regex]::Replace($t, $re2, 'CAST(NULL AS STRING)$1', 'IgnoreCase'); if ($n -ne $t) { [IO.File]::WriteAllText($_.FullName, $n); "fixed: $($_.Name)" } }
+Get-ChildItem projects\interactions -Recurse -Include *.sql,*.yaml | Select-String -Pattern 'PrimaryPosition' | ForEach-Object { "{0}:{1}: {2}" -f $_.Filename, $_.LineNumber, $_.Line.Trim() }
